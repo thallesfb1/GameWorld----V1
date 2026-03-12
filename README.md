@@ -39,8 +39,7 @@ GameWorld
 │   │       ├── analytics_service.py
 │   │       ├── user_service.py
 │   │       └── igdb_service.py
-│   ├── requirements.txt
-│   └── render.yaml             # Render.com deploy config
+│   └── requirements.txt
 │
 └── frontend/                   # React + Vite SPA
     └── src/
@@ -92,21 +91,6 @@ npm run dev
 | `GET` | `/user/{id}/stats` | Personal user statistics |
 
 ---
-
-## ☁️ Deploy
-
-### Backend → [Render.com](https://render.com)
-1. Connect your GitHub repo
-2. Select `backend/` as root
-3. Build: `pip install -r requirements.txt`
-4. Start: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-5. Set env vars from `.env.example`
-
-### Frontend → [Vercel](https://vercel.com)
-1. Connect your GitHub repo
-2. Select `frontend/` as root
-3. Framework: Vite
-4. Set `VITE_API_URL` to your Render backend URL
 
 ---
 
