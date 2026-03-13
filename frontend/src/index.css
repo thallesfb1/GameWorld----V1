@@ -1443,10 +1443,7 @@ body {
 
   /* ── Insights Panel ── */
   .insights-toggle {
-    bottom: 16px;
-    left: 16px;
-    padding: 9px 14px;
-    font-size: 0.78rem;
+    display: none;
   }
 
   .insights-panel {
