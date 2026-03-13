@@ -58,6 +58,7 @@ export function getEraColor(era) { return ERA_COLORS[era] || DEFAULT_COLOR; }
 
 export default function Globe({ games, selectedGame, onGameClick, playedGameIds, theme, focusGame, mapStyle = 'texture' }) {
     const globeRef = useRef();
+    const isMobile = window.innerWidth < 640;
     const [dims, setDims] = useState({ w: window.innerWidth, h: window.innerHeight });
     const autoRotateTimer = useRef(null);
     // Always-fresh click handler via ref — fixes stale-closure issue
@@ -83,19 +84,25 @@ export default function Globe({ games, selectedGame, onGameClick, playedGameIds,
     // Controls
     useEffect(() => {
         if (!globeRef.current) return;
+        const mobile = window.innerWidth < 640;
         const ctrl = globeRef.current.controls();
         ctrl.autoRotate = true;
         ctrl.autoRotateSpeed = 0.35;
         ctrl.enableDamping = true;
         ctrl.dampingFactor = 0.08;
-        ctrl.enablePan = true;
+        ctrl.enablePan = !mobile; // disable pan on mobile (pinch-zoom is enough)
         ctrl.panSpeed = 1.0;
         ctrl.screenSpacePanning = false;
         ctrl.enableZoom = true;
-        ctrl.zoomSpeed = 0.9;
-        ctrl.minDistance = 160;
+        ctrl.zoomSpeed = mobile ? 0.6 : 0.9;
+        ctrl.minDistance = mobile ? 220 : 160;
         ctrl.maxDistance = 750;
         ctrl.mouseButtons = { LEFT: 0, MIDDLE: 1, RIGHT: 2 };
+
+        // Start zoomed out on mobile so the globe looks small & full world is visible
+        if (mobile) {
+            globeRef.current.pointOfView({ lat: 20, lng: 0, altitude: 3.5 }, 0);
+        }
 
         const canvas = globeRef.current.renderer().domElement;
         const suppressCtx = (e) => e.preventDefault();
@@ -148,8 +155,10 @@ export default function Globe({ games, selectedGame, onGameClick, playedGameIds,
         const isSelected = selectedGame?.id === game.id;
         const isPlayed = playedGameIds.includes(game.id);
         const color = isPlayed ? '#00FF88' : getEraColor(game.era_label);
-        const size = isSelected ? 20 : 11;
-
+        const mobile = window.innerWidth < 640;
+        const size = isSelected ? 20 : (mobile ? 9 : 11);
+        // On mobile, hide labels for non-selected pins to reduce clutter
+        const showLabel = isSelected || !mobile;
         const wrap = document.createElement('div');
         wrap.style.cssText = 'position:relative;display:flex;flex-direction:column;align-items:center;pointer-events:none;';
 
@@ -214,8 +223,10 @@ export default function Globe({ games, selectedGame, onGameClick, playedGameIds,
         wrap.appendChild(dot);
 
         // Floating label — name only for idle pins, name + era for selected
-        const lbl = document.createElement('div');
-        lbl.style.cssText = `
+        // On mobile: only show label for the selected pin (avoids clutter)
+        if (showLabel) {
+            const lbl = document.createElement('div');
+            lbl.style.cssText = `
       position:absolute;top:${size + 6}px;
       left:50%;transform:translateX(-50%);
       background:rgba(6,6,22,${isSelected ? '.94' : '.80'});
@@ -226,10 +237,12 @@ export default function Globe({ games, selectedGame, onGameClick, playedGameIds,
       pointer-events:none;z-index:10;
       max-width:160px;text-align:center;
     `;
-        lbl.innerHTML = isSelected
-            ? `${game.title}<span style="display:block;font-size:9px;color:${color};font-weight:400;margin-top:1px">${game.era_label}</span>`
-            : game.title;
-        wrap.appendChild(lbl);
+            lbl.innerHTML = isSelected
+                ? `${game.title}<span style="display:block;font-size:9px;color:${color};font-weight:400;margin-top:1px">${game.era_label}</span>`
+                : game.title;
+            wrap.appendChild(lbl);
+        }
+
 
         return wrap;
         // eslint-disable-next-line react-hooks/exhaustive-deps

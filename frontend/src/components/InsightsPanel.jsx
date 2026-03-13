@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 function BarChart({ data, colorKey }) {
     const max = Math.max(...data.map((d) => d.percentage));
@@ -23,6 +23,12 @@ function BarChart({ data, colorKey }) {
 export default function InsightsPanel({ analytics, stats }) {
     const [open, setOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('continents');
+
+    useEffect(() => {
+        const handleToggle = () => setOpen(o => !o);
+        window.addEventListener('gw:toggle-insights', handleToggle);
+        return () => window.removeEventListener('gw:toggle-insights', handleToggle);
+    }, []);
 
     return (
         <>

@@ -4,10 +4,22 @@ import GameModal from './components/GameModal.jsx';
 import InsightsPanel from './components/InsightsPanel.jsx';
 import UserStats from './components/UserStats.jsx';
 import SearchFilter from './components/SearchFilter.jsx';
+import MobileMenu from './components/MobileMenu.jsx';
+import MobileFilterDrawer from './components/MobileFilterDrawer.jsx';
 import {
     fetchGames, fetchStats, fetchAnalytics,
     markGamePlayed, unmarkGamePlayed, fetchUserStats,
 } from './services/api.js';
+
+function useIsMobile() {
+    const [isMobile, setIsMobile] = useState(() => window.innerWidth < 640);
+    useEffect(() => {
+        const fn = () => setIsMobile(window.innerWidth < 640);
+        window.addEventListener('resize', fn);
+        return () => window.removeEventListener('resize', fn);
+    }, []);
+    return isMobile;
+}
 
 // Persistent anonymous user ID
 function getUserId() {
@@ -21,6 +33,7 @@ function getUserId() {
 const USER_ID = getUserId();
 
 export default function App() {
+    const isMobile = useIsMobile();
     const [games, setGames] = useState([]);
     const [stats, setStats] = useState(null);
     const [analytics, setAnalytics] = useState(null);
@@ -31,6 +44,10 @@ export default function App() {
     const [error, setError] = useState(null);
     const [theme, setTheme] = useState(() => localStorage.getItem('gw_theme') || 'dark');
     const [mapStyle, setMapStyle] = useState(() => localStorage.getItem('gw_map_style') || 'texture');
+
+    // Mobile UI state
+    const [menuOpen, setMenuOpen] = useState(false);
+    const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
 
     // Search & filter state
     const [searchQuery, setSearchQuery] = useState('');
@@ -98,6 +115,13 @@ export default function App() {
         } catch (e) { console.error(e); }
     }, [playedIds, refreshUserStats]);
 
+    // Close menu when switching to desktop
+    useEffect(() => {
+        if (!isMobile) { setMenuOpen(false); setFilterDrawerOpen(false); }
+    }, [isMobile]);
+
+    const hasActiveFilter = searchQuery || filters.era || filters.continent || filters.genre || filters.platform;
+
     return (
         <div className="app">
             <header className="app-header">
@@ -105,36 +129,72 @@ export default function App() {
                     <span className="header-logo">🌐</span>
                     <span className="header-title">GameWorld</span>
                 </div>
-                <p className="header-subtitle">Explore video games mapped across history &amp; geography</p>
-                <div className="header-actions">
-                    {stats && (
-                        <span className="header-badge">
-                            {stats.total_games} games · {stats.countries_count} countries · {stats.eras_count} eras
-                        </span>
-                    )}
+
+                {/* Desktop-only elements */}
+                {!isMobile && (
+                    <>
+                        <p className="header-subtitle">Explore video games mapped across history &amp; geography</p>
+                        <div className="header-actions">
+                            {stats && (
+                                <span className="header-badge">
+                                    {stats.total_games} games · {stats.countries_count} countries · {stats.eras_count} eras
+                                </span>
+                            )}
+                            <button
+                                className="btn-theme"
+                                onClick={toggleTheme}
+                                title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                                aria-label="Toggle theme"
+                            >
+                                {theme === 'dark' ? '☀️' : '🌙'}
+                            </button>
+                            <button
+                                className={`btn-map-style ${mapStyle === 'lines' ? 'btn-map-style--lines' : ''}`}
+                                onClick={toggleMapStyle}
+                                title={mapStyle === 'texture' ? 'Switch to Lines Only' : 'Switch to Texture'}
+                                aria-label="Toggle map style"
+                            >
+                                🗺️ <span>Texture: {mapStyle === 'texture' ? 'ON' : 'OFF'}</span>
+                            </button>
+                            <button className="btn-user" onClick={() => setShowUserStats(s => !s)} title="My Stats">
+                                🧑‍🚀 My Stats
+                            </button>
+                        </div>
+                    </>
+                )}
+
+                {/* Mobile-only: hamburger button */}
+                {isMobile && (
                     <button
-                        className="btn-theme"
-                        onClick={toggleTheme}
-                        title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-                        aria-label="Toggle theme"
+                        id="hamburger-btn"
+                        className={`hamburger-btn ${menuOpen ? 'hamburger-btn--open' : ''}`}
+                        onClick={() => setMenuOpen(o => !o)}
+                        aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+                        aria-expanded={menuOpen}
                     >
-                        {theme === 'dark' ? '☀️' : '🌙'}
+                        <span className="hamburger-bar" />
+                        <span className="hamburger-bar" />
+                        <span className="hamburger-bar" />
                     </button>
-                    <button
-                        className={`btn-map-style ${mapStyle === 'lines' ? 'btn-map-style--lines' : ''}`}
-                        onClick={toggleMapStyle}
-                        title={mapStyle === 'texture' ? 'Switch to Lines Only' : 'Switch to Texture'}
-                        aria-label="Toggle map style"
-                    >
-                        🗺️ <span>Texture: {mapStyle === 'texture' ? 'ON' : 'OFF'}</span>
-                    </button>
-                    <button className="btn-user" onClick={() => setShowUserStats(s => !s)} title="My Stats">
-                        🧑‍🚀 My Stats
-                    </button>
-                </div>
+                )}
             </header>
 
-            {!loading && !error && (
+            {/* Mobile dropdown menu */}
+            {isMobile && (
+                <MobileMenu
+                    open={menuOpen}
+                    onClose={() => setMenuOpen(false)}
+                    stats={stats}
+                    theme={theme}
+                    mapStyle={mapStyle}
+                    toggleTheme={toggleTheme}
+                    toggleMapStyle={toggleMapStyle}
+                    onShowStats={() => setShowUserStats(s => !s)}
+                />
+            )}
+
+            {/* Desktop search/filter bar */}
+            {!isMobile && !loading && !error && (
                 <SearchFilter
                     games={games}
                     query={searchQuery}
@@ -178,14 +238,28 @@ export default function App() {
             <InsightsPanel analytics={analytics} stats={stats} theme={theme} />
 
             {showUserStats && (
-                <UserStats userStats={userStats} onClose={() => setShowUserStats(false)} />
+                <div className="panel-backdrop" onClick={() => setShowUserStats(false)}>
+                    <div onClick={e => e.stopPropagation()}>
+                        <UserStats userStats={userStats} onClose={() => setShowUserStats(false)} />
+                    </div>
+                </div>
             )}
 
             <div className="controls-hint">
-                <span>🖱 <kbd>Drag</kbd> Rotate</span>
-                <span><kbd>Right-Drag</kbd> Pan</span>
-                <span><kbd>Scroll</kbd> Zoom</span>
-                <span><kbd>Click pin</kbd> Open game</span>
+                {isMobile ? (
+                    <>
+                        <span>👆 <kbd>Drag</kbd> Rotate</span>
+                        <span>🤏 <kbd>Pinch</kbd> Zoom</span>
+                        <span><kbd>Tap pin</kbd> Open game</span>
+                    </>
+                ) : (
+                    <>
+                        <span>🖱 <kbd>Drag</kbd> Rotate</span>
+                        <span><kbd>Right-Drag</kbd> Pan</span>
+                        <span><kbd>Scroll</kbd> Zoom</span>
+                        <span><kbd>Click pin</kbd> Open game</span>
+                    </>
+                )}
             </div>
 
             <div className="legend">
@@ -194,6 +268,53 @@ export default function App() {
                 <span className="legend-dot legend-dot--era" />
                 <span>Era Color</span>
             </div>
+
+            {/* Mobile bottom navigation bar */}
+            {isMobile && !loading && !error && (
+                <nav className="mobile-bottom-bar" aria-label="Mobile navigation">
+                    <button
+                        id="mobile-search-btn"
+                        className={`mobile-bottom-btn ${filterDrawerOpen ? 'mobile-bottom-btn--active' : ''} ${hasActiveFilter ? 'mobile-bottom-btn--filtered' : ''}`}
+                        onClick={() => setFilterDrawerOpen(o => !o)}
+                        aria-label="Search and filter games"
+                    >
+                        <span className="mobile-bottom-btn-icon">🔍</span>
+                        <span className="mobile-bottom-btn-label">
+                            Search
+                            {hasActiveFilter && <span className="mobile-bottom-btn-dot" />}
+                        </span>
+                    </button>
+
+                    <button
+                        id="mobile-insights-btn"
+                        className="mobile-bottom-btn"
+                        onClick={() => {
+                            // Trigger the InsightsPanel toggle via a custom event
+                            window.dispatchEvent(new CustomEvent('gw:toggle-insights'));
+                        }}
+                        aria-label="Open insights panel"
+                    >
+                        <span className="mobile-bottom-btn-icon">📊</span>
+                        <span className="mobile-bottom-btn-label">Insights</span>
+                    </button>
+                </nav>
+            )}
+
+            {/* Mobile filter drawer */}
+            {isMobile && !loading && !error && (
+                <MobileFilterDrawer
+                    open={filterDrawerOpen}
+                    onClose={() => setFilterDrawerOpen(false)}
+                    games={games}
+                    query={searchQuery}
+                    filters={filters}
+                    onQueryChange={setSearchQuery}
+                    onFilterChange={handleFilterChange}
+                    onClear={handleClearFilters}
+                    filteredCount={filteredGames.length}
+                    onSearch={handleSearch}
+                />
+            )}
         </div>
     );
 }
