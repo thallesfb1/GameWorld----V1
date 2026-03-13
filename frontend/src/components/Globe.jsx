@@ -95,7 +95,7 @@ export default function Globe({ games, selectedGame, onGameClick, playedGameIds,
         ctrl.screenSpacePanning = false;
         ctrl.enableZoom = true;
         ctrl.zoomSpeed = mobile ? 0.6 : 0.9;
-        ctrl.minDistance = mobile ? 220 : 160;
+        ctrl.minDistance = mobile ? 120 : 160;
         ctrl.maxDistance = 750;
         ctrl.mouseButtons = { LEFT: 0, MIDDLE: 1, RIGHT: 2 };
 
