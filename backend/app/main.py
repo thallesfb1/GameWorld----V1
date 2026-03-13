@@ -2,6 +2,9 @@ from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import List
+import json
+import os
+from datetime import datetime
 
 from app.schemas import (
     Game,
@@ -9,6 +12,7 @@ from app.schemas import (
     AnalyticsResponse,
     PlayedGameRequest,
     UserStatsResponse,
+    GameSuggestionRequest,
 )
 from app.services.game_service import get_all_games, get_game_by_id
 from app.services.stats_service import compute_stats
@@ -108,3 +112,29 @@ def user_stats(user_id: str, db: Session = Depends(get_db)):
 @app.get("/health", tags=["Health"])
 def health():
     return {"status": "ok", "service": "GameWorld API"}
+
+
+# ── Suggestions ───────────────────────────────────────────────────────────────
+SUGGESTIONS_FILE = os.path.join(os.path.dirname(__file__), "data", "suggestions.json")
+
+@app.post("/suggestions", tags=["Suggestions"])
+def suggest_game(suggestion: GameSuggestionRequest):
+    """Submit a game suggestion to be saved locally in a JSON file."""
+    try:
+        if os.path.exists(SUGGESTIONS_FILE):
+            with open(SUGGESTIONS_FILE, "r", encoding="utf-8") as f:
+                suggestions = json.load(f)
+        else:
+            suggestions = []
+            
+        new_suggestion = suggestion.dict()
+        new_suggestion["timestamp"] = datetime.utcnow().isoformat()
+        
+        suggestions.append(new_suggestion)
+        
+        with open(SUGGESTIONS_FILE, "w", encoding="utf-8") as f:
+            json.dump(suggestions, f, indent=4, ensure_ascii=False)
+            
+        return {"success": True, "message": "Suggestion saved successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to save suggestion: {str(e)}")

@@ -7,6 +7,7 @@ export default function MobileMenu({
     toggleTheme,
     toggleMapStyle,
     onShowStats,
+    onSuggestGame,
 }) {
     return (
         <>
@@ -75,6 +76,17 @@ export default function MobileMenu({
                 >
                     <span className="mobile-menu-item-icon">🧑‍🚀</span>
                     <span className="mobile-menu-item-label">My Stats</span>
+                    <span className="mobile-menu-item-arrow">›</span>
+                </button>
+
+                <div className="mobile-menu-divider" />
+
+                <button
+                    className="mobile-menu-item"
+                    onClick={() => { onSuggestGame(); onClose(); }}
+                >
+                    <span className="mobile-menu-item-icon">💡</span>
+                    <span className="mobile-menu-item-label">Suggest a Game</span>
                     <span className="mobile-menu-item-arrow">›</span>
                 </button>
             </div>

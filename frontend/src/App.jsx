@@ -6,6 +6,7 @@ import UserStats from './components/UserStats.jsx';
 import SearchFilter from './components/SearchFilter.jsx';
 import MobileMenu from './components/MobileMenu.jsx';
 import MobileFilterDrawer from './components/MobileFilterDrawer.jsx';
+import SuggestionModal from './components/SuggestionModal.jsx';
 import {
     fetchGames, fetchStats, fetchAnalytics,
     markGamePlayed, unmarkGamePlayed, fetchUserStats,
@@ -40,6 +41,7 @@ export default function App() {
     const [selectedGame, setSelectedGame] = useState(null);
     const [userStats, setUserStats] = useState(null);
     const [showUserStats, setShowUserStats] = useState(false);
+    const [showSuggestionModal, setShowSuggestionModal] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [theme, setTheme] = useState(() => localStorage.getItem('gw_theme') || 'dark');
@@ -156,6 +158,9 @@ export default function App() {
                             >
                                 🗺️ <span>Texture: {mapStyle === 'texture' ? 'ON' : 'OFF'}</span>
                             </button>
+                            <button className="btn-suggest-game" onClick={() => setShowSuggestionModal(true)} title="Suggest a missing game">
+                                💡 Suggest Game
+                            </button>
                             <button className="btn-user" onClick={() => setShowUserStats(s => !s)} title="My Stats">
                                 🧑‍🚀 My Stats
                             </button>
@@ -190,6 +195,7 @@ export default function App() {
                     toggleTheme={toggleTheme}
                     toggleMapStyle={toggleMapStyle}
                     onShowStats={() => setShowUserStats(s => !s)}
+                    onSuggestGame={() => setShowSuggestionModal(true)}
                 />
             )}
 
@@ -243,6 +249,10 @@ export default function App() {
                         <UserStats userStats={userStats} onClose={() => setShowUserStats(false)} />
                     </div>
                 </div>
+            )}
+
+            {showSuggestionModal && (
+                <SuggestionModal onClose={() => setShowSuggestionModal(false)} />
             )}
 
             <div className="controls-hint">

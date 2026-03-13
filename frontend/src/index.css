@@ -2028,3 +2028,142 @@ body {
 [data-theme="light"] .mobile-menu-item {
   color: #1a1a2e;
 }
+
+/* ── Suggestion Modal ────────────────────────────────────────── */
+.suggestion-card {
+  max-width: 450px;
+  width: 90%;
+  padding: 30px 25px;
+}
+
+.suggestion-subtitle {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin-bottom: 24px;
+  line-height: 1.4;
+}
+
+.suggestion-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+}
+
+.form-group label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.form-group input {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 0.95rem;
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+[data-theme="light"] .form-group input {
+  background: #fff;
+  border-color: rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="light"] .form-group label {
+  color: #555;
+}
+
+.btn-submit-suggestion {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 12px;
+  font-family: var(--font);
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-submit-suggestion:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(108, 92, 231, 0.4);
+}
+
+.btn-submit-suggestion:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.suggestion-error {
+  color: var(--accent3);
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+.suggestion-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px 0;
+  text-align: center;
+}
+
+.success-icon {
+  font-size: 3rem;
+  margin-bottom: 16px;
+}
+
+.suggestion-success h3 {
+  color: var(--green);
+  margin-bottom: 8px;
+}
+
+.suggestion-success p {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.btn-suggest-game {
+  background: rgba(108, 92, 231, 0.15);
+  border: 1px solid rgba(108, 92, 231, 0.3);
+  color: var(--accent);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-family: var(--font);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-suggest-game:hover {
+  background: rgba(108, 92, 231, 0.25);
+  border-color: var(--accent);
+}
+
+[data-theme="light"] .btn-suggest-game {
+  background: transparent;
+  border-color: rgba(108, 92, 231, 0.4);
+}

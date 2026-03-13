@@ -41,3 +41,13 @@ export async function fetchUserStats(userId) {
     if (!res.ok) throw new Error('Failed to fetch user stats');
     return res.json();
 }
+
+export async function submitSuggestion(suggestionData) {
+    const res = await fetch(`${BASE_URL}/suggestions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(suggestionData),
+    });
+    if (!res.ok) throw new Error('Failed to submit suggestion');
+    return res.json();
+}

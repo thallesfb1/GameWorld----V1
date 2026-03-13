@@ -61,3 +61,10 @@ class UserStatsResponse(BaseModel):
     favorite_era: Optional[str]
     favorite_genre: Optional[str]
     played_game_ids: List[str]
+
+
+class GameSuggestionRequest(BaseModel):
+    title: str
+    location: str
+    era_or_year: str
+    reference_link: Optional[str] = None
