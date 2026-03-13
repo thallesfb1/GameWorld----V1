@@ -157,8 +157,8 @@ export default function Globe({ games, selectedGame, onGameClick, playedGameIds,
         const color = isPlayed ? '#00FF88' : getEraColor(game.era_label);
         const mobile = window.innerWidth < 640;
         const size = isSelected ? 20 : (mobile ? 9 : 11);
-        // On mobile, hide labels for non-selected pins to reduce clutter
-        const showLabel = isSelected || !mobile;
+        // Show labels on all devices
+        const showLabel = true;
         const wrap = document.createElement('div');
         wrap.style.cssText = 'position:relative;display:flex;flex-direction:column;align-items:center;pointer-events:none;';
 
