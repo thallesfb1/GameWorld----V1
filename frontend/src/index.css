@@ -2166,4 +2166,335 @@ body {
 [data-theme="light"] .btn-suggest-game {
   background: transparent;
   border-color: rgba(108, 92, 231, 0.4);
-}
+}
+
+/* ============================================================
+   Analytics Dashboard Panel
+   ============================================================ */
+
+/* ── Toggle button — sits above the Insights toggle ─────────── */
+.analytics-toggle {
+  position: fixed;
+  bottom: 80px;
+  left: 28px;
+  z-index: 150;
+  background: rgba(12, 12, 35, 0.9);
+  border: 1px solid rgba(0, 206, 201, 0.35);
+  color: var(--text);
+  border-radius: 50px;
+  padding: 10px 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  transition: all 0.25s;
+  backdrop-filter: blur(12px);
+  font-family: var(--font);
+  box-shadow: var(--shadow);
+}
+
+.analytics-toggle:hover,
+.analytics-toggle--active {
+  background: rgba(0, 206, 201, 0.15);
+  border-color: var(--accent2);
+  box-shadow: 0 0 30px rgba(0, 206, 201, 0.2);
+}
+
+.analytics-toggle-icon {
+  font-size: 1rem;
+}
+
+.analytics-toggle-label {
+  font-size: 0.82rem;
+}
+
+/* ── Slide-in panel ─────────────────────────────────────────── */
+.analytics-panel {
+  position: fixed;
+  top: 70px;
+  right: 0;
+  z-index: 140;
+  width: 360px;
+  max-width: 96vw;
+  max-height: calc(100vh - 90px);
+  background: rgba(8, 8, 28, 0.97);
+  border: 1px solid rgba(0, 206, 201, 0.2);
+  border-right: none;
+  border-radius: 20px 0 0 20px;
+  backdrop-filter: blur(24px);
+  box-shadow: -8px 0 40px rgba(0, 0, 0, 0.5), 0 0 40px rgba(0, 206, 201, 0.06);
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.35s cubic-bezier(0.34, 1.2, 0.64, 1), opacity 0.3s ease;
+  overflow: hidden;
+}
+
+.analytics-panel--open {
+  transform: translateX(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ── Header ─────────────────────────────────────────────────── */
+.analytics-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px 12px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.analytics-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.analytics-header h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.analytics-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: color 0.2s;
+  flex-shrink: 0;
+}
+
+.analytics-close:hover {
+  color: var(--text);
+}
+
+/* ── Active filter badge ──────────────────────────────────────── */
+.active-filter-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 206, 201, 0.15);
+  border: 1px solid rgba(0, 206, 201, 0.35);
+  color: var(--accent2);
+  border-radius: 20px;
+  padding: 2px 8px 2px 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  animation: fadeIn 0.2s ease;
+}
+
+.active-filter-clear {
+  background: none;
+  border: none;
+  color: var(--accent2);
+  cursor: pointer;
+  font-size: 0.75rem;
+  padding: 0;
+  opacity: 0.7;
+  line-height: 1;
+  transition: opacity 0.15s;
+}
+
+.active-filter-clear:hover {
+  opacity: 1;
+}
+
+/* ── Tabs ──────────────────────────────────────────────────────  */
+.analytics-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.analytics-tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 600;
+  font-family: var(--font);
+  padding: 10px 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.analytics-tab:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.analytics-tab--active {
+  color: var(--accent2);
+  border-bottom-color: var(--accent2);
+}
+
+/* ── Chart container ─────────────────────────────────────────── */
+.analytics-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 16px 8px 8px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent) transparent;
+}
+
+.analytics-content::-webkit-scrollbar {
+  width: 4px;
+}
+
+.analytics-content::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border-radius: 2px;
+}
+
+/* ── Footer hint ─────────────────────────────────────────────── */
+.analytics-hint {
+  text-align: center;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  padding: 8px 12px 12px;
+  flex-shrink: 0;
+}
+
+/* ── Shared chart tooltip ────────────────────────────────────── */
+.chart-tooltip {
+  background: rgba(8, 8, 28, 0.96);
+  border: 1px solid rgba(0, 206, 201, 0.3);
+  border-radius: 10px;
+  padding: 8px 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  min-width: 120px;
+}
+
+.chart-tooltip-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.chart-tooltip-value {
+  font-size: 0.72rem;
+  color: var(--accent2);
+  font-weight: 600;
+}
+
+.chart-tooltip-sub {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* ── Empty / loading state ───────────────────────────────────── */
+.chart-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+/* ── Analytics button in header ─────────────────────────────── */
+.btn-analytics {
+  background: rgba(0, 206, 201, 0.1);
+  border: 1px solid rgba(0, 206, 201, 0.25);
+  color: var(--accent2);
+  border-radius: 20px;
+  padding: 6px 16px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-analytics:hover,
+.btn-analytics--active {
+  background: rgba(0, 206, 201, 0.2);
+  border-color: var(--accent2);
+  box-shadow: 0 0 20px rgba(0, 206, 201, 0.15);
+}
+
+/* ── Mobile: panel becomes bottom sheet ───────────────────────  */
+@media (max-width: 639px) {
+  .analytics-toggle {
+    display: none; /* replaced by bottom bar button */
+  }
+
+  .analytics-panel {
+    top: auto;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    width: 100%;
+    max-width: 100%;
+    max-height: 75vh;
+    border-radius: 20px 20px 0 0;
+    border-right: 1px solid rgba(0, 206, 201, 0.2);
+    border-bottom: none;
+    transform: translateY(100%);
+    opacity: 1;
+    transition: transform 0.35s cubic-bezier(0.34, 1.1, 0.64, 1);
+  }
+
+  .analytics-panel--open {
+    transform: translateY(0);
+  }
+
+  .analytics-tabs {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ── Light theme overrides ───────────────────────────────────── */
+[data-theme="light"] .analytics-toggle {
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--text);
+}
+
+[data-theme="light"] .analytics-panel {
+  background: rgba(248, 249, 255, 0.98);
+  border-color: rgba(0, 206, 201, 0.2);
+}
+
+[data-theme="light"] .chart-tooltip {
+  background: rgba(248, 249, 255, 0.98);
+  border-color: rgba(0, 206, 201, 0.3);
+}
+
+[data-theme="light"] .analytics-tab {
+  color: rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="light"] .analytics-tab:hover {
+  color: var(--text);
+}
+
+[data-theme="light"] .analytics-tab--active {
+  color: var(--accent2);
+}
+
+[data-theme="light"] .btn-analytics {
+  background: transparent;
+}
+

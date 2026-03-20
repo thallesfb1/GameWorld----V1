@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import Globe from './components/Globe.jsx';
 import GameModal from './components/GameModal.jsx';
 import InsightsPanel from './components/InsightsPanel.jsx';
+import AnalyticsPanel from './components/AnalyticsPanel.jsx';
 import UserStats from './components/UserStats.jsx';
 import SearchFilter from './components/SearchFilter.jsx';
 import MobileMenu from './components/MobileMenu.jsx';
@@ -50,6 +51,7 @@ export default function App() {
     // Mobile UI state
     const [menuOpen, setMenuOpen] = useState(false);
     const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
+    const [showAnalytics, setShowAnalytics] = useState(false);
 
     // Search & filter state
     const [searchQuery, setSearchQuery] = useState('');
@@ -161,6 +163,13 @@ export default function App() {
                             <button className="btn-suggest-game" onClick={() => setShowSuggestionModal(true)} title="Suggest a missing game">
                                 💡 Suggest Game
                             </button>
+                            <button
+                                className={`btn-analytics ${showAnalytics ? 'btn-analytics--active' : ''}`}
+                                onClick={() => setShowAnalytics(s => !s)}
+                                title="Analytics Dashboard"
+                            >
+                                📈 Analytics
+                            </button>
                             <button className="btn-user" onClick={() => setShowUserStats(s => !s)} title="My Stats">
                                 🧑‍🚀 My Stats
                             </button>
@@ -243,6 +252,14 @@ export default function App() {
 
             <InsightsPanel analytics={analytics} stats={stats} theme={theme} />
 
+            <AnalyticsPanel
+                analytics={analytics}
+                open={showAnalytics}
+                onClose={() => setShowAnalytics(s => !s)}
+                activeFilter={filters}
+                onFilter={handleFilterChange}
+            />
+
             {showUserStats && (
                 <div className="panel-backdrop" onClick={() => setShowUserStats(false)}>
                     <div onClick={e => e.stopPropagation()}>
@@ -299,13 +316,22 @@ export default function App() {
                         id="mobile-insights-btn"
                         className="mobile-bottom-btn"
                         onClick={() => {
-                            // Trigger the InsightsPanel toggle via a custom event
                             window.dispatchEvent(new CustomEvent('gw:toggle-insights'));
                         }}
                         aria-label="Open insights panel"
                     >
                         <span className="mobile-bottom-btn-icon">📊</span>
                         <span className="mobile-bottom-btn-label">Insights</span>
+                    </button>
+
+                    <button
+                        id="mobile-analytics-btn"
+                        className={`mobile-bottom-btn ${showAnalytics ? 'mobile-bottom-btn--active' : ''}`}
+                        onClick={() => setShowAnalytics(s => !s)}
+                        aria-label="Open analytics dashboard"
+                    >
+                        <span className="mobile-bottom-btn-icon">📈</span>
+                        <span className="mobile-bottom-btn-label">Analytics</span>
                     </button>
                 </nav>
             )}

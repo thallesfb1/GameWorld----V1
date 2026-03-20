@@ -40,9 +40,28 @@ class EraDistribution(BaseModel):
     percentage: float
 
 
+class CountryDistribution(BaseModel):
+    name: str
+    count: int
+
+
+class TimelinePoint(BaseModel):
+    era_label: str
+    era_start: int
+    count: int
+
+
+class GenreDistribution(BaseModel):
+    genre: str
+    count: int
+
+
 class AnalyticsResponse(BaseModel):
     continent_distribution: List[ContinentDistribution]
     era_distribution: List[EraDistribution]
+    country_distribution: List[CountryDistribution]
+    timeline: List[TimelinePoint]
+    genre_distribution: List[GenreDistribution]
     top_country: str
     top_era: str
     top_genre: str

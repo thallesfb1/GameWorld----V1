@@ -20,6 +20,9 @@
 | 🧑‍🚀 **Personal Stats** | Track games you've played, see your exploration % |
 | 🏛️ **Historical Eras** | Games color-coded by historical era (Stone Age → Future) |
 | 🔌 **IGDB Integration** | Auto-fetch covers & descriptions via the IGDB API |
+| 📱 **Mobile Experience** | Dedicated mobile interface with bottom navigation and slide-up drawers |
+| 💡 **Game Suggestions** | Suggest missing games directly to be added to the database |
+| 🎨 **Globe Styling** | Toggle between immersive textured maps and minimalist lines-only views |
 
 ---
 
@@ -49,7 +52,9 @@ GameWorld
         │   ├── Globe.jsx       # react-globe.gl 3D globe
         │   ├── GameModal.jsx   # Game detail modal
         │   ├── InsightsPanel.jsx  # Analytics sidebar
-        │   └── UserStats.jsx   # Personal stats panel
+        │   ├── UserStats.jsx   # Personal stats panel
+        │   ├── MobileMenu.jsx  # Mobile navigation menu
+        │   └── SuggestionModal.jsx # Game suggestion form
         └── services/api.js     # API client
 ```
 
@@ -89,6 +94,7 @@ npm run dev
 | `POST` | `/user/{id}/played` | Mark game as played |
 | `DELETE` | `/user/{id}/played/{game_id}` | Unmark game |
 | `GET` | `/user/{id}/stats` | Personal user statistics |
+| `POST` | `/suggestions` | Submit a new game suggestion |
 
 ---
 
