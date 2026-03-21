@@ -1,12 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import Globe from './components/Globe.jsx';
-import GameModal from './components/GameModal.jsx';
-import InsightsPanel from './components/InsightsPanel.jsx';
-import AnalyticsPanel from './components/AnalyticsPanel.jsx';
-import UserStats from './components/UserStats.jsx';
-import SearchFilter from './components/SearchFilter.jsx';
-import MobileMenu from './components/MobileMenu.jsx';
-import MobileFilterDrawer from './components/MobileFilterDrawer.jsx';
+import Sidebar from './components/Sidebar.jsx';
 import SuggestionModal from './components/SuggestionModal.jsx';
 import {
     fetchGames, fetchStats, fetchAnalytics,
@@ -14,16 +8,15 @@ import {
 } from './services/api.js';
 
 function useIsMobile() {
-    const [isMobile, setIsMobile] = useState(() => window.innerWidth < 640);
+    const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
     useEffect(() => {
-        const fn = () => setIsMobile(window.innerWidth < 640);
+        const fn = () => setIsMobile(window.innerWidth < 768);
         window.addEventListener('resize', fn);
         return () => window.removeEventListener('resize', fn);
     }, []);
     return isMobile;
 }
 
-// Persistent anonymous user ID
 function getUserId() {
     let id = localStorage.getItem('gw_user_id');
     if (!id) {
@@ -36,22 +29,24 @@ const USER_ID = getUserId();
 
 export default function App() {
     const isMobile = useIsMobile();
+
+    // Data
     const [games, setGames] = useState([]);
     const [stats, setStats] = useState(null);
     const [analytics, setAnalytics] = useState(null);
-    const [selectedGame, setSelectedGame] = useState(null);
     const [userStats, setUserStats] = useState(null);
-    const [showUserStats, setShowUserStats] = useState(false);
-    const [showSuggestionModal, setShowSuggestionModal] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+
+    // UI state
+    const [selectedGame, setSelectedGame] = useState(null);
     const [theme, setTheme] = useState(() => localStorage.getItem('gw_theme') || 'dark');
     const [mapStyle, setMapStyle] = useState(() => localStorage.getItem('gw_map_style') || 'texture');
+    const [showSuggestionModal, setShowSuggestionModal] = useState(false);
 
-    // Mobile UI state
-    const [menuOpen, setMenuOpen] = useState(false);
-    const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
-    const [showAnalytics, setShowAnalytics] = useState(false);
+    // Sidebar state
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [sidebarTab, setSidebarTab] = useState('insights');
 
     // Search & filter state
     const [searchQuery, setSearchQuery] = useState('');
@@ -85,6 +80,7 @@ export default function App() {
         }
     }, [filteredGames]);
 
+    // Theme
     useEffect(() => {
         document.documentElement.setAttribute('data-theme', theme);
         localStorage.setItem('gw_theme', theme);
@@ -97,6 +93,7 @@ export default function App() {
         return next;
     });
 
+    // Load data
     useEffect(() => {
         Promise.all([fetchGames(), fetchStats(), fetchAnalytics()])
             .then(([g, s, a]) => { setGames(g); setStats(s); setAnalytics(a); setLoading(false); })
@@ -119,121 +116,103 @@ export default function App() {
         } catch (e) { console.error(e); }
     }, [playedIds, refreshUserStats]);
 
-    // Close menu when switching to desktop
-    useEffect(() => {
-        if (!isMobile) { setMenuOpen(false); setFilterDrawerOpen(false); }
-    }, [isMobile]);
+    // When a game is clicked, open the sidebar to the Game tab
+    const handleGameClick = useCallback((game) => {
+        setSelectedGame(game);
+        setSidebarTab('game');
+        setSidebarOpen(true);
+    }, []);
 
-    const hasActiveFilter = searchQuery || filters.era || filters.continent || filters.genre || filters.platform;
+    const handleSidebarClose = useCallback(() => {
+        setSidebarOpen(prev => !prev);
+    }, []);
 
     return (
         <div className="app">
-            <header className="app-header">
-                <div className="header-brand">
-                    <span className="header-logo">🌐</span>
-                    <span className="header-title">GameWorld</span>
+            {/* ── Top Nav ──────────────────────────────────────────── */}
+            <header className="app-nav">
+                {/* Left: sidebar toggle + brand */}
+                <div className="nav-left">
+                    <button
+                        className={`nav-sidebar-toggle ${sidebarOpen ? 'nav-sidebar-toggle--active' : ''}`}
+                        onClick={() => setSidebarOpen(o => !o)}
+                        aria-label={sidebarOpen ? 'Close sidebar' : 'Open sidebar'}
+                        title="Toggle sidebar"
+                    >
+                        <span className="nav-sidebar-toggle-bar" />
+                        <span className="nav-sidebar-toggle-bar" />
+                        <span className="nav-sidebar-toggle-bar" />
+                    </button>
+                    <div className="nav-brand">
+                        <span className="nav-logo">🌐</span>
+                        <span className="nav-title">GameWorld</span>
+                    </div>
+                    {stats && !isMobile && (
+                        <span className="nav-badge">
+                            {stats.total_games} games · {stats.countries_count} countries
+                        </span>
+                    )}
                 </div>
 
-                {/* Desktop-only elements */}
-                {!isMobile && (
-                    <>
-                        <p className="header-subtitle">Explore video games mapped across history &amp; geography</p>
-                        <div className="header-actions">
-                            {stats && (
-                                <span className="header-badge">
-                                    {stats.total_games} games · {stats.countries_count} countries · {stats.eras_count} eras
-                                </span>
-                            )}
-                            <button
-                                className="btn-theme"
-                                onClick={toggleTheme}
-                                title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-                                aria-label="Toggle theme"
-                            >
-                                {theme === 'dark' ? '☀️' : '🌙'}
-                            </button>
-                            <button
-                                className={`btn-map-style ${mapStyle === 'lines' ? 'btn-map-style--lines' : ''}`}
-                                onClick={toggleMapStyle}
-                                title={mapStyle === 'texture' ? 'Switch to Lines Only' : 'Switch to Texture'}
-                                aria-label="Toggle map style"
-                            >
-                                🗺️ <span>Texture: {mapStyle === 'texture' ? 'ON' : 'OFF'}</span>
-                            </button>
-                            <button className="btn-suggest-game" onClick={() => setShowSuggestionModal(true)} title="Suggest a missing game">
-                                💡 Suggest Game
-                            </button>
-                            <button
-                                className={`btn-analytics ${showAnalytics ? 'btn-analytics--active' : ''}`}
-                                onClick={() => setShowAnalytics(s => !s)}
-                                title="Analytics Dashboard"
-                            >
-                                📈 Analytics
-                            </button>
-                            <button className="btn-user" onClick={() => setShowUserStats(s => !s)} title="My Stats">
-                                🧑‍🚀 My Stats
-                            </button>
-                        </div>
-                    </>
-                )}
-
-                {/* Mobile-only: hamburger button */}
-                {isMobile && (
+                {/* Right: icon actions */}
+                <div className="nav-actions">
                     <button
-                        id="hamburger-btn"
-                        className={`hamburger-btn ${menuOpen ? 'hamburger-btn--open' : ''}`}
-                        onClick={() => setMenuOpen(o => !o)}
-                        aria-label={menuOpen ? 'Close menu' : 'Open menu'}
-                        aria-expanded={menuOpen}
+                        className={`nav-icon-btn ${mapStyle === 'lines' ? 'nav-icon-btn--active' : ''}`}
+                        onClick={toggleMapStyle}
+                        title={mapStyle === 'texture' ? 'Switch to Lines Only' : 'Switch to Texture'}
+                        aria-label="Toggle map style"
                     >
-                        <span className="hamburger-bar" />
-                        <span className="hamburger-bar" />
-                        <span className="hamburger-bar" />
+                        🗺️
                     </button>
-                )}
+                    <button
+                        className="nav-icon-btn"
+                        onClick={() => setShowSuggestionModal(true)}
+                        title="Suggest a missing game"
+                        aria-label="Suggest a game"
+                    >
+                        💡
+                    </button>
+                    <button
+                        className="nav-icon-btn"
+                        onClick={() => {
+                            setSidebarTab('insights');
+                            setSidebarOpen(true);
+                        }}
+                        title="My Stats"
+                        aria-label="My Stats"
+                    >
+                        🧑‍🚀
+                    </button>
+                    <button
+                        className="nav-icon-btn"
+                        onClick={toggleTheme}
+                        title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                        aria-label="Toggle theme"
+                    >
+                        {theme === 'dark' ? '☀️' : '🌙'}
+                    </button>
+                </div>
             </header>
 
-            {/* Mobile dropdown menu */}
-            {isMobile && (
-                <MobileMenu
-                    open={menuOpen}
-                    onClose={() => setMenuOpen(false)}
-                    stats={stats}
-                    theme={theme}
-                    mapStyle={mapStyle}
-                    toggleTheme={toggleTheme}
-                    toggleMapStyle={toggleMapStyle}
-                    onShowStats={() => setShowUserStats(s => !s)}
-                    onSuggestGame={() => setShowSuggestionModal(true)}
-                />
-            )}
-
-            {/* Desktop search/filter bar */}
-            {!isMobile && !loading && !error && (
-                <SearchFilter
-                    games={games}
-                    query={searchQuery}
-                    filters={filters}
-                    onQueryChange={setSearchQuery}
-                    onFilterChange={handleFilterChange}
-                    onClear={handleClearFilters}
-                    filteredCount={filteredGames.length}
-                    onSearch={handleSearch}
-                />
-            )}
-
+            {/* ── Globe ────────────────────────────────────────────── */}
             {loading ? (
-                <div className="loading-screen"><div className="spinner" /><p>Loading GameWorld…</p></div>
+                <div className="loading-screen">
+                    <div className="spinner" />
+                    <p>Loading GameWorld…</p>
+                </div>
             ) : error ? (
                 <div className="error-screen">
-                    <h2>⚠️ Failed to load</h2><p>{error}</p>
-                    <p className="error-hint">Make sure the backend is running: <code>uvicorn app.main:app --reload</code></p>
+                    <h2>⚠️ Failed to load</h2>
+                    <p>{error}</p>
+                    <p className="error-hint">
+                        Make sure the backend is running: <code>uvicorn app.main:app --reload</code>
+                    </p>
                 </div>
             ) : (
                 <Globe
                     games={filteredGames}
                     selectedGame={selectedGame}
-                    onGameClick={setSelectedGame}
+                    onGameClick={handleGameClick}
                     playedGameIds={playedIds}
                     theme={theme}
                     focusGame={focusGame}
@@ -241,115 +220,65 @@ export default function App() {
                 />
             )}
 
-            {selectedGame && (
-                <GameModal
-                    game={selectedGame}
-                    onClose={() => setSelectedGame(null)}
-                    isPlayed={playedIds.includes(selectedGame.id)}
-                    onTogglePlayed={handleTogglePlayed}
-                />
-            )}
-
-            <InsightsPanel analytics={analytics} stats={stats} theme={theme} />
-
-            <AnalyticsPanel
+            {/* ── Sidebar ───────────────────────────────────────────── */}
+            <Sidebar
+                open={sidebarOpen}
+                onClose={handleSidebarClose}
+                activeTab={sidebarTab}
+                onTabChange={tab => { setSidebarTab(tab); setSidebarOpen(true); }}
+                // Insights
                 analytics={analytics}
-                open={showAnalytics}
-                onClose={() => setShowAnalytics(s => !s)}
+                stats={stats}
+                userStats={userStats}
+                // Filters
+                games={games}
+                query={searchQuery}
+                filters={filters}
+                onQueryChange={setSearchQuery}
+                onFilterChange={handleFilterChange}
+                onClear={handleClearFilters}
+                filteredCount={filteredGames.length}
+                onSearch={handleSearch}
+                // Game detail
+                selectedGame={selectedGame}
+                isPlayed={selectedGame ? playedIds.includes(selectedGame.id) : false}
+                onTogglePlayed={handleTogglePlayed}
+                // Analytics filter
                 activeFilter={filters}
                 onFilter={handleFilterChange}
             />
 
-            {showUserStats && (
-                <div className="panel-backdrop" onClick={() => setShowUserStats(false)}>
-                    <div onClick={e => e.stopPropagation()}>
-                        <UserStats userStats={userStats} onClose={() => setShowUserStats(false)} />
-                    </div>
-                </div>
-            )}
-
+            {/* ── Suggestion Modal ──────────────────────────────────── */}
             {showSuggestionModal && (
                 <SuggestionModal onClose={() => setShowSuggestionModal(false)} />
             )}
 
-            <div className="controls-hint">
-                {isMobile ? (
-                    <>
-                        <span>👆 <kbd>Drag</kbd> Rotate</span>
-                        <span>🤏 <kbd>Pinch</kbd> Zoom</span>
-                        <span><kbd>Tap pin</kbd> Open game</span>
-                    </>
-                ) : (
-                    <>
-                        <span>🖱 <kbd>Drag</kbd> Rotate</span>
-                        <span><kbd>Right-Drag</kbd> Pan</span>
-                        <span><kbd>Scroll</kbd> Zoom</span>
-                        <span><kbd>Click pin</kbd> Open game</span>
-                    </>
-                )}
-            </div>
-
-            <div className="legend">
-                <span className="legend-dot" style={{ background: '#00FF88' }} />
-                <span>Played</span>
-                <span className="legend-dot legend-dot--era" />
-                <span>Era Color</span>
-            </div>
-
-            {/* Mobile bottom navigation bar */}
-            {isMobile && !loading && !error && (
-                <nav className="mobile-bottom-bar" aria-label="Mobile navigation">
-                    <button
-                        id="mobile-search-btn"
-                        className={`mobile-bottom-btn ${filterDrawerOpen ? 'mobile-bottom-btn--active' : ''} ${hasActiveFilter ? 'mobile-bottom-btn--filtered' : ''}`}
-                        onClick={() => setFilterDrawerOpen(o => !o)}
-                        aria-label="Search and filter games"
-                    >
-                        <span className="mobile-bottom-btn-icon">🔍</span>
-                        <span className="mobile-bottom-btn-label">
-                            Search
-                            {hasActiveFilter && <span className="mobile-bottom-btn-dot" />}
-                        </span>
-                    </button>
-
-                    <button
-                        id="mobile-insights-btn"
-                        className="mobile-bottom-btn"
-                        onClick={() => {
-                            window.dispatchEvent(new CustomEvent('gw:toggle-insights'));
-                        }}
-                        aria-label="Open insights panel"
-                    >
-                        <span className="mobile-bottom-btn-icon">📊</span>
-                        <span className="mobile-bottom-btn-label">Insights</span>
-                    </button>
-
-                    <button
-                        id="mobile-analytics-btn"
-                        className={`mobile-bottom-btn ${showAnalytics ? 'mobile-bottom-btn--active' : ''}`}
-                        onClick={() => setShowAnalytics(s => !s)}
-                        aria-label="Open analytics dashboard"
-                    >
-                        <span className="mobile-bottom-btn-icon">📈</span>
-                        <span className="mobile-bottom-btn-label">Analytics</span>
-                    </button>
-                </nav>
-            )}
-
-            {/* Mobile filter drawer */}
-            {isMobile && !loading && !error && (
-                <MobileFilterDrawer
-                    open={filterDrawerOpen}
-                    onClose={() => setFilterDrawerOpen(false)}
-                    games={games}
-                    query={searchQuery}
-                    filters={filters}
-                    onQueryChange={setSearchQuery}
-                    onFilterChange={handleFilterChange}
-                    onClear={handleClearFilters}
-                    filteredCount={filteredGames.length}
-                    onSearch={handleSearch}
-                />
+            {/* ── Bottom hints ──────────────────────────────────────── */}
+            {!loading && !error && (
+                <>
+                    <div className="controls-hint">
+                        {isMobile ? (
+                            <>
+                                <span>👆 <kbd>Drag</kbd> Rotate</span>
+                                <span>🤏 <kbd>Pinch</kbd> Zoom</span>
+                                <span><kbd>Tap pin</kbd> Open game</span>
+                            </>
+                        ) : (
+                            <>
+                                <span>🖱 <kbd>Drag</kbd> Rotate</span>
+                                <span><kbd>Right-Drag</kbd> Pan</span>
+                                <span><kbd>Scroll</kbd> Zoom</span>
+                                <span><kbd>Click pin</kbd> Open game</span>
+                            </>
+                        )}
+                    </div>
+                    <div className="legend">
+                        <span className="legend-dot" style={{ background: '#00FF88' }} />
+                        <span>Played</span>
+                        <span className="legend-dot legend-dot--era" />
+                        <span>Era Color</span>
+                    </div>
+                </>
             )}
         </div>
     );
